@@ -4,7 +4,7 @@ Raw HTML, anything.
 
 Including a stream can be done too: ${() => require('fs').createReadStream('file.txt')}.
 
-A stream from a different source is fine too: ${() => new Promise(r => require('https').get('https://example.com', r))}.
+A stream in a promise from a different source is fine too: ${() => new Promise(r => require('https').get('https://example.com', r))}.
 
 Promises work too: ${() => new Promise(r => setTimeout(r, 3e3, 'Resolved after 3 seconds'))}.
 
