@@ -1,4 +1,4 @@
-const { Stream } = require('stream')
+const { Stream, Transform } = require('stream')
 const isReadableStream = obj => (obj instanceof Stream)
   && 'function' === typeof obj._read
   && 'object' === typeof obj._readableState
@@ -9,8 +9,11 @@ const isWritableStream = obj => (obj instanceof Stream)
   ;
 
 const escHTML = {
-  re: /[<>'"]/g, // problem characters are caught here 
-  sub(tx) {return `&#${tx.charCodeAt(0)};`}
+  re: /[<>'"\0]/g, // problem characters are caught here. Yeah, null is an issue in random places.
+  sub(tx) { return String.raw`&#${tx.charCodeAt(0)};` },
+  transform(chk, enc, cb) {
+    return cb(null, (!Buffer.isBuffer(chk) ? str : String(str)).replace(escHTML.re, escHTML.sub))
+  }
 }
 
 const writer = (writable, env = {}, data, enc = 'utf8') => new Promise(async (res, rej) => {
@@ -60,7 +63,12 @@ const writer = (writable, env = {}, data, enc = 'utf8') => new Promise(async (re
         ;
       write.all = all
 
-      let text = (str, enc) => write(str.replace(escHTML.re, escHTML.sub), enc)
+      let text = async (str, enc) => !isReadableStream(str) ? write(
+        ('string' === typeof str ? str : String(await str)).replace(escHTML.re, escHTML.sub),
+        enc
+      ) : new Promise(r => str.on('end', r).pipe(new Transform(escHTML)).pipe(writable, { end: false }))
+
+
       write.text = text
       // console.log({data, env})
       return Promise.resolve(data(env, write, next)).then(v => {

@@ -2,6 +2,13 @@ const README = require('../named')('README.md', 'text/markdown') `# Func - y (fu
 
 Auto-calling render functions.
 
+## Features
+
+* Streams (see below)
+* Promises (see below)
+* HTML safe: ${(e, {text}) => text('Ohoh <sript src="//example.com/script"></script>')} is all escaped by the write.text() function.
+  * Streams can be throw through there too if you don't trust a file.
+
 ## Usage
 
 ### Unnamed templates
@@ -30,11 +37,13 @@ Results in a data like this:
 ${({ util }) => util.inspect(README, false, 4, false)}
 \`\`\`
 
-${({ fs, path }, write) => write.all(
+${
+  ({ fs, path }, write) => write.all(
     fs.createReadStream(path.join(__dirname, 'api.md')),
     '\n\n',
     fs.createReadStream(path.join(__dirname, 'alts.md'))
-  )}`
+  )
+}`
 
 const env = {
   fs: require('fs'),

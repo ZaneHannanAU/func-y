@@ -2,6 +2,13 @@
 
 Auto-calling render functions.
 
+## Features
+
+* Streams (see below)
+* Promises (see below)
+* HTML safe: Ohoh &#60;sript src=&#34;//example.com/script&#34;&#62;&#60;/script&#62; is all escaped by the write.text() function.
+  * Streams can be throw through there too if you don't trust a file.
+
 ## Usage
 
 ### Unnamed templates
@@ -44,6 +51,13 @@ const README = require('../named')('README.md', 'text/markdown') `# Func - y (fu
 
 Auto-calling render functions.
 
+## Features
+
+* Streams (see below)
+* Promises (see below)
+* HTML safe: ${(e, {text}) => text('Ohoh <sript src="//example.com/script"></script>')} is all escaped by the write.text() function.
+  * Streams can be throw through there too if you don't trust a file.
+
 ## Usage
 
 ### Unnamed templates
@@ -72,11 +86,13 @@ Results in a data like this:
 ${({ util }) => util.inspect(README, false, 4, false)}
 \`\`\`
 
-${({ fs, path }, write) => write.all(
+${
+  ({ fs, path }, write) => write.all(
     fs.createReadStream(path.join(__dirname, 'api.md')),
     '\n\n',
     fs.createReadStream(path.join(__dirname, 'alts.md'))
-  )}`
+  )
+}`
 
 const env = {
   fs: require('fs'),
@@ -99,7 +115,9 @@ Results in a data like this:
 { name: 'README.md',
   type: 'text/markdown',
   template: 
-   [ '# Func - y (funk-ee)\n\nAuto-calling render functions.\n\n## Usage\n\n### Unnamed templates\n\n```javascript\n',
+   [ '# Func - y (funk-ee)\n\nAuto-calling render functions.\n\n## Features\n\n* Streams (see below)\n* Promises (see below)\n* HTML safe: ',
+     [Function],
+     ' is all escaped by the write.text() function.\n  * Streams can be throw through there too if you don\'t trust a file.\n\n## Usage\n\n### Unnamed templates\n\n```javascript\n',
      [Function],
      '\n```\n\nThe above will result in the following array:\n\n```javascript\n',
      [Function],
