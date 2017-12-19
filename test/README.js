@@ -1,6 +1,6 @@
-const README = require('../named')('README.md', 'text/markdown') `# Func - y
+const README = require('../named')('README.md', 'text/markdown') `# Func - y (funk-ee)
 
-Auto - calling render functions.
+Auto-calling render functions.
 
 ## Usage
 
@@ -30,12 +30,11 @@ Results in a data like this:
 ${({ util }) => util.inspect(README, false, 4, false)}
 \`\`\`
 
-${async ({ fs, path }, write) => {
-  await write(fs.createReadStream(path.join(__dirname, 'api.md')))
-  await write('\n\n')
-  await write(fs.createReadStream(path.join(__dirname, 'alts.md')))
-  return
-}}`
+${({ fs, path }, write) => write.all(
+    fs.createReadStream(path.join(__dirname, 'api.md')),
+    '\n\n',
+    fs.createReadStream(path.join(__dirname, 'alts.md'))
+  )}`
 
 const env = {
   fs: require('fs'),

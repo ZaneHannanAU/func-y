@@ -8,6 +8,11 @@ const isWritableStream = obj => (obj instanceof Stream)
   && 'object' === typeof obj._writableState
   ;
 
+const escHTML = {
+  re: /[<>'"]/g, // problem characters are caught here 
+  sub(tx) {return `&#${tx.charCodeAt(0)};`}
+}
+
 const writer = (writable, env = {}, data, enc = 'utf8') => new Promise(async (res, rej) => {
   // console.log('have data: %s', require('util').inspect(data, {colors: true}))
   if (!data && data !== 0) return res(true)
@@ -55,7 +60,7 @@ const writer = (writable, env = {}, data, enc = 'utf8') => new Promise(async (re
         ;
       write.all = all
 
-      let text = (str, enc) => write(str.replace(/</g, '&lt;').replace(/>/g, '&gt;'), enc)
+      let text = (str, enc) => write(str.replace(escHTML.re, escHTML.sub), enc)
       write.text = text
       // console.log({data, env})
       return Promise.resolve(data(env, write, next)).then(v => {
@@ -96,5 +101,6 @@ const writeIter = async (writable, enc, arr, env, autoclose = true) => {
 module.exports = writeIter
 module.exports.writeIter = writeIter
 module.exports.writer = writer
+module.exports.escHTML = escHTML
 module.exports.isReadableStream = isReadableStream
 module.exports.isWritableStream = isWritableStream
