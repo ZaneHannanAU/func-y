@@ -18,9 +18,23 @@ const myTemplate = require('..') `You can put anything here now.
 
 Raw HTML, anything.
 
-Including a stream can be done too: ${() => require('fs').createReadStream('file.txt')}.
+Including a stream can be done too: ${(env, {file}) => file('file.txt')}.
 
-A stream in a promise from a different source is fine too: ${() => new Promise(r => require('https').get('https://example.com', r))}.
+Note that this is an effective shortcut for \`require('fs').createReadStream('file.txt')\`.
+
+A stream in a promise from a different source is fine too: ${(env, {net}) => net('https://example.com')}.
+
+Note that this is an effective shortcut for
+
+\`\`\`javascript
+(opts) => new Promise(r => {
+  let {URL} = require('url')
+  let o = 'string' === typeof opts ? new URL(opts) : opts
+  require(o.protocol.slice(0,-1)).request(o, r)
+})
+\`\`\`
+
+. See func-y/writer.js#writeFromNet (34:1) for more details.
 
 Promises work too: ${() => new Promise(r => setTimeout(r, 3e3, 'Resolved after 3 seconds'))}.
 
@@ -34,9 +48,9 @@ The above will result in the following array:
 ```javascript
 [ 'You can put anything here now.\n\nRaw HTML, anything.\n\nIncluding a stream can be done too: ',
   [Function],
-  '.\n\nA stream in a promise from a different source is fine too: ',
+  '.\n\nNote that this is an effective shortcut for `require(\'fs\').createReadStream(\'file.txt\')`.\n\nA stream in a promise from a different source is fine too: ',
   [Function],
-  '.\n\nPromises work too: ',
+  '.\n\nNote that this is an effective shortcut for\n\n```javascript\n(opts) => new Promise(r => {\n  let {URL} = require(\'url\')\n  let o = \'string\' === typeof opts ? new URL(opts) : opts\n  require(o.protocol.slice(0,-1)).request(o, r)\n})\n```\n\n. See func-y/writer.js#writeFromNet (34:1) for more details.\n\nPromises work too: ',
   [Function],
   '.\n\nThere\'s other stuff: ',
   [Function] ]
