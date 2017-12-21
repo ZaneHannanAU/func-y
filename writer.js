@@ -29,19 +29,31 @@ const writeFromFile = (file, opts) => Promise.resolve(file).then(fn => {
     case 'object': if (Array.isArray(fn)) return crs(join(...fn), opts)
     default: throw new TypeError(`write.file: unsupported first argument type "${typeof fn}", what.`)
   }
-}).catch(e => {
-  console.error(e)
-  throw e
 })
 
 const writeFromNet = (opts, cb) => new Promise(r => {
   const {URL} = require('url')
   const options = 'string' === typeof opts ? new URL(opts) : opts
-  const req = require(options.protocol.slice(0, -1)).request(URL, res => {
+  const req = require(options.protocol.slice(0, -1)).request(options, res => {
     if ('function' === typeof cb) r(cb({req, res}))
     else r(res)
   })
 })
+
+const writeNext = (res, rej, write, e, d) => (
+  !e ? (d || d === 0 ? write(d).then(() => res(), rej) : res()) : rej(e)
+  // error and data checks
+)
+
+const writeAll = (write, current, ...chunks) => current && chunks.length
+  ? Promise.resolve(current).then(write).then(() => writeAll(write, ...chunks))
+  : Promise.resolve(current).then(write).then(() => null)
+  ;
+
+const writeText = async (writeable, write, str, enc) => !isReadableStream(str) ? write(
+  ('string' === typeof str ? str : String(await str)).replace(escHTML.re, escHTML.sub),
+  enc
+) : new Promise(r => str.on('end', r).pipe(new Transform(escHTML)).pipe(writable, { end: false }))
 
 const writer = (writable, env = {}, data, enc = 'utf8') => new Promise(async (res, rej) => {
   // console.log('have data: %s', require('util').inspect(data, {colors: true}))
@@ -85,27 +97,12 @@ const writer = (writable, env = {}, data, enc = 'utf8') => new Promise(async (re
       write.file = writeFromFile
       write.net = writeFromNet
 
-      let next = (e, d) => (
-        !e ? (d || d === 0 ? write(d).then(() => res(), rej) : res()) : rej(e)
-        // error and data checks
-      )
-      write.next = next
+      write.next = writeNext.bind(null, res, rej, write)
+      write.all = writeAll.bind(null, write)
+      write.text = writeText.bind(null, writable, write)
 
-      let all = (current, ...chunks) => current && chunks.length
-        ? Promise.resolve(current).then(write).then(() => all(...chunks))
-        : Promise.resolve(current).then(write).then(() => null)
-        ;
-      write.all = all
-
-      let text = async (str, enc) => !isReadableStream(str) ? write(
-        ('string' === typeof str ? str : String(await str)).replace(escHTML.re, escHTML.sub),
-        enc
-      ) : new Promise(r => str.on('end', r).pipe(new Transform(escHTML)).pipe(writable, { end: false }))
-
-
-      write.text = text
       // console.log({data, env})
-      return Promise.resolve(data(env, write, next)).then(v => {
+      return Promise.resolve(data(env, write, write.next)).then(v => {
         if (v || v === 0) return write(v).then(res)
         return res()
       })
@@ -143,6 +140,14 @@ const writeIter = async (writable, enc, arr, env, autoclose = true) => {
 module.exports = writeIter
 module.exports.writeIter = writeIter
 module.exports.writer = writer
+
 module.exports.escHTML = escHTML
+
 module.exports.isReadableStream = isReadableStream
 module.exports.isWritableStream = isWritableStream
+
+module.exports.writeFromFile = writeFromFile
+module.exports.writeFromNet = writeFromNet
+module.exports.writeNext = writeNext
+module.exports.writeAll = writeAll
+module.exports.writeText = writeText
