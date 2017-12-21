@@ -96,6 +96,7 @@ const writer = (writable, env = {}, data, enc = 'utf8') => new Promise(async (re
 
       write.file = writeFromFile
       write.net = writeFromNet
+      write.request = writeFromNet
 
       write.next = writeNext.bind(null, res, rej, write)
       write.all = writeAll.bind(null, write)
