@@ -37,8 +37,8 @@ const writeFromFile = (file, opts) => Promise.resolve(file).then(fn => {
 const writeFromNet = (opts, cb) => new Promise(r => {
   const {URL} = require('url')
   const options = 'string' === typeof opts ? new URL(opts) : opts
-  require(options.protocol.slice(0,-1)).request(URL, res => {
-    if ('function' === typeof cb) r(cb(res))
+  const req = require(options.protocol.slice(0, -1)).request(URL, res => {
+    if ('function' === typeof cb) r(cb({req, res}))
     else r(res)
   })
 })
