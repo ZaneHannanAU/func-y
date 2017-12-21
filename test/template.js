@@ -22,6 +22,6 @@ Note that this is an effective shortcut for
 
 Promises work too: ${() => new Promise(r => setTimeout(r, 3e3, 'Resolved after 3 seconds'))}.
 
-There's other stuff: ${(env, write) => write.all(123, 'Mix and match', Infinity, String.fromCodePoint(0x2026), new Promise(r => setTimeout(r, 2e3, 'with random timing')), () => 'and subfunctions if memory is an issue?')}`
+There's other stuff: ${(env, write) => write.all(123, 'Mix and match', Infinity, String.fromCodePoint(0x2026), new Promise(r => setTimeout(r, 2e3, 'with random timing')), (env, write) => 'and subfunctions if memory is an issue?')}`
 
 module.exports = myTemplate

@@ -50,10 +50,12 @@ const writeAll = (write, current, ...chunks) => current && chunks.length
   : Promise.resolve(current).then(write).then(() => null)
   ;
 
-const writeText = async (writeable, write, str, enc) => !isReadableStream(str) ? write(
-  ('string' === typeof str ? str : String(await str)).replace(escHTML.re, escHTML.sub),
-  enc
-) : new Promise(r => str.on('end', r).pipe(new Transform(escHTML)).pipe(writable, { end: false }))
+const writeText = async (writeable, write, STR, enc) => Promise.resolve(STR).then(
+  str => !isReadableStream(str) ? write(
+    ('string' === typeof str ? str : String(str)).replace(escHTML.re, escHTML.sub),
+    enc
+  ) : new Promise(r => str.on('end', r).pipe(new Transform(escHTML)).pipe(writable, { end: false }))
+)
 
 const writer = (writable, env = {}, data, enc = 'utf8') => new Promise(async (res, rej) => {
   // console.log('have data: %s', require('util').inspect(data, {colors: true}))
