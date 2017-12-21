@@ -63,7 +63,7 @@ Auto-calling render functions.
 ### Unnamed templates
 
 \`\`\`javascript
-${({ fs, path }) => fs.createReadStream(path.join(__dirname, './template.js'))}
+${(env, { file }) => file([__dirname, './template.js'])}
 \`\`\`
 
 The above will result in the following array:
@@ -77,7 +77,7 @@ ${({ util }) => util.inspect(require('./template.js'), false, 3, false)}
 For named templates (like this README.md from [\`test/README.js\`](./test/README.js)), there are several options:
 
 \`\`\`javascript
-${({ fs, path }) => fs.createReadStream(path.join(__dirname, './README.js'))}
+${(env, write) => write.file([__dirname, './README.js'])}
 \`\`\`
 
 Results in a data like this:
@@ -87,23 +87,19 @@ ${({ util }) => util.inspect(README, false, 4, false)}
 \`\`\`
 
 ${
-  ({ fs, path }, write) => write.all(
-    fs.createReadStream(path.join(__dirname, 'api.md')),
+  (env, write) => write.all(
+    write.file([__dirname, 'api.md']),
     '\n\n',
-    fs.createReadStream(path.join(__dirname, 'alts.md'))
+    write.file([__dirname, 'alts.md'])
   )
 }`
 
-const env = {
-  fs: require('fs'),
-  util: require('util'),
-  path: require('path')
-}
+const env = { util: require('util') }
 
 README.writeToFile(require('path').join(__dirname, '../README.md'), {
   overwrite: true, env
 }).then(console.log, console.error)
-README.writeTo(process.stdout, env, false)
+README.writeTo(process.stdout, env, false).catch(console.error)
 
 
 module.exports = README

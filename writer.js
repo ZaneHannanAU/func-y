@@ -16,12 +16,40 @@ const escHTML = {
   }
 }
 
+const writeFromFile = (file, opts) => Promise.resolve(file).then(fn => {
+  const { createReadStream: crs } = require('fs')
+  const { join } = require('path')
+
+  if ('string' === typeof opts) opts = { encoding: String(opts) }
+  else if ('undefined' !== typeof opts && 'object' !== typeof opts && !Array.isArray(opts))
+    throw new TypeError('write.file: opts must be string, object or undefined type.')
+  switch (typeof fn) {
+    case 'string': return crs(fn, opts)
+    case 'number': return crs(null, { fd: fn, ...opts })
+    case 'object': if (Array.isArray(fn)) return crs(join(...fn), opts)
+    default: throw new TypeError(`write.file: unsupported first argument type "${typeof fn}", what.`)
+  }
+}).catch(e => {
+  console.error(e)
+  throw e
+})
+
+const writeFromNet = (opts, cb) => new Promise(r => {
+  const {URL} = require('url')
+  const options = 'string' === typeof opts ? new URL(opts) : opts
+  require(options.protocol.slice(0,-1)).request(URL, res => {
+    if ('function' === typeof cb) r(cb(res))
+    else r(res)
+  })
+})
+
 const writer = (writable, env = {}, data, enc = 'utf8') => new Promise(async (res, rej) => {
   // console.log('have data: %s', require('util').inspect(data, {colors: true}))
-  if (!data && data !== 0) return res(true)
+  if (!data && data !== 0 && data !== false) return res(true)
   switch (typeof (data)) {
     case 'string':
     case 'number':
+    case 'boolean':
       return Promise.resolve(writable.write(String(data), enc))
         .then(v => v ? res() : writable.once('drain', res), rej)
 
@@ -45,21 +73,27 @@ const writer = (writable, env = {}, data, enc = 'utf8') => new Promise(async (re
         .on('error', rej)
         .pipe(writable, { end: false })
 
+      console.error(data)
+      return rej({error: `Unknown object data`, data})
+
     case 'function':
       // console.log('function call')
       let write = writer.bind(null, writable, env)
       write.error = rej
       write.destroy = rej
 
+      write.file = writeFromFile
+      write.net = writeFromNet
+
       let next = (e, d) => (
-        !e ? (d || d === 0 ? write(d).then(res, rej) : res()) : rej(e), // error and data checks
-        null // return null after all of it. Just in case.
+        !e ? (d || d === 0 ? write(d).then(() => res(), rej) : res()) : rej(e)
+        // error and data checks
       )
       write.next = next
 
       let all = (current, ...chunks) => current && chunks.length
-        ? write(current).then(() => all(...chunks))
-        : write(current)
+        ? Promise.resolve(current).then(write).then(() => all(...chunks))
+        : Promise.resolve(current).then(write).then(() => null)
         ;
       write.all = all
 
@@ -95,7 +129,7 @@ const writeIter = async (writable, enc, arr, env, autoclose = true) => {
       // console.log('got data: %s', util.inspect(data, {colors: true}))
       await writer(writable, env, data, enc)
     }
-    return new Promise(r => {
+    return await new Promise(r => {
       if (autoclose && !writable.isTTY) writable.end(r); else r();
       writable.once('drain', r);
       setTimeout(r, 1e4)

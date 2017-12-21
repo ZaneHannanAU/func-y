@@ -4,7 +4,7 @@
   "description": "A stream-friendly Node.js template system using functions, promises and template literals.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node test/README.js && echo 'Built README.md from test/README.js'"
   },
   "repository": {
     "type": "git",
