@@ -5,7 +5,7 @@ const isReadableStream = obj => (obj instanceof Stream)
   ;
 const isWritableStream = obj => (obj instanceof Stream)
   && 'function' === typeof obj._write
-  && 'object' === typeof (obj._writableState || obj.readableState)
+  && 'object' === typeof (obj._writableState || obj.writableState)
   ;
 
 const escHTML = {
