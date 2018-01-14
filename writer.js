@@ -1,11 +1,11 @@
 const { Stream, Transform } = require('stream')
 const isReadableStream = obj => (obj instanceof Stream)
   && 'function' === typeof obj._read
-  && 'object' === typeof obj._readableState
+  && 'object' === typeof (obj._readableState || obj.readableState)
   ;
 const isWritableStream = obj => (obj instanceof Stream)
   && 'function' === typeof obj._write
-  && 'object' === typeof obj._writableState
+  && 'object' === typeof (obj._writableState || obj.readableState)
   ;
 
 const escHTML = {
