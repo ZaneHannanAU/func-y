@@ -14,7 +14,7 @@ const namedTemplate = (name, type = 'text/html') => (...v) => set(name, {
   template: extractTemplate(...v),
   middleware(req, res) {
     res.setHeader('content-type', this.type)
-    return require('./writer').writeIter(res, 'utf8', this.template, res.locals || {})
+    return require('./writer').writeIter(res, 'utf8', this.template, res.locals || {}, true, true)
   },
   createMiddleWare() {
     return this.middleware.bind(this)

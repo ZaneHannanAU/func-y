@@ -122,8 +122,8 @@ const writer = (writable, env = {}, data, enc = 'utf8') => new Promise(async (re
  * @param {*[]} arr - array of data to write or call (buffer, string, function, ...)
  * @param {*} env - environment to use.
  */
-const writeIter = async (writable, enc, arr, env, autoclose = true) => {
-  if (!isWritableStream(writable)) throw new TypeError('writable is not a writable stream')
+const writeIter = async (writable, enc, arr, env, autoclose = true, override = false) => {
+  if (!override && !isWritableStream(writable)) throw new TypeError('writable is not a writable stream')
   try {
     for (const data of await arr) {
       // console.log('got data: %s', util.inspect(data, {colors: true}))
