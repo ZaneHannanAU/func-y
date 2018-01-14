@@ -1,6 +1,6 @@
 {
   "name": "func-y",
-  "version": "2.2.2",
+  "version": "2.2.3",
   "description": "A stream-friendly Node.js template system using functions, promises and template literals.",
   "main": "index.js",
   "scripts": {
